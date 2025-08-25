@@ -1,14 +1,26 @@
 const Post = require("../models/Post");
 
 // add
-function addPost(post) {
-  return Post.create(post);
+async function addPost(post) {
+  const newPost = await Post.create(post);
+
+  await newPost.populate({
+    path: "comments",
+    populate: "author",
+  });
+
+  return newPost;
 }
 
 // edit
 async function editPost(id, post) {
   const newPost = await Post.findByIdAndUpdate(id, post, {
     returnDocument: "after",
+  });
+
+  await newPost.populate({
+    path: "comments",
+    populate: "author",
   });
 
   return newPost;
@@ -40,7 +52,11 @@ async function getPosts(search = "", limit = 10, page = 1) {
 
 // get item
 function getPost(id) {
-  return Post.findById(id);
+  // Разворачиваем пост и комментарии, + методами mongoose заменяем id пользователя на имя
+  return Post.findById(id).populate({
+    path: "comments",
+    populate: "author",
+  });
 }
 
 module.exports = {

@@ -21,6 +21,8 @@ const authenticated = require("./middlewares/authenticated");
 const hasRole = require("./middlewares/hasRole");
 const ROLES = require("./constants/roles");
 const mapPost = require("./helpers/mapPost");
+const { addComment, deleteComment } = require("./controllers/comment");
+const mapComment = require("./helpers/mapComment");
 
 const port = 3001;
 const app = express();
@@ -78,6 +80,27 @@ app.get("/posts/:id", async (req, res) => {
 
 // Для действий ниже - пользователь должен быть аутентифицирован
 app.use(authenticated);
+
+// Добавление комментария - для любого залогиненного пользователя
+app.post("/posts/:id/comments", async (req, res) => {
+  const newComment = await addComment(req.params.id, {
+    content: req.body.content,
+    author: req.user.id,
+  });
+
+  res.send({ data: mapComment(newComment) });
+});
+
+// Удаление комментария
+app.delete(
+  "/posts/:postId/comments/:commentId",
+  hasRole([ROLES.ADMIN, ROLES.MODERATOR]),
+  async (req, res) => {
+    await deleteComment(req.params.postId, req.params.commentId);
+
+    res.send({ error: null });
+  }
+);
 
 // Добавление поста
 app.post("/posts", hasRole([ROLES.ADMIN]), async (req, res) => {
