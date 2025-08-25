@@ -9,10 +9,18 @@ const {
   updateUser,
   deleteUser,
 } = require("./controllers/user");
+const {
+  getPosts,
+  getPost,
+  addPost,
+  editPost,
+  deletePost,
+} = require("./controllers/post");
 const mapUser = require("./helpers/mapUser");
 const authenticated = require("./middlewares/authenticated");
 const hasRole = require("./middlewares/hasRole");
 const ROLES = require("./constants/roles");
+const mapPost = require("./helpers/mapPost");
 
 const port = 3001;
 const app = express();
@@ -50,8 +58,55 @@ app.post("/logout", async (req, res) => {
   res.cookie("token", "", { httpOnly: true }).send({});
 });
 
-// Пользователь должен быть аутентифицирован
+// Получение постов
+app.get("/posts", async (req, res) => {
+  const { posts, lastPage } = await getPosts(
+    req.query.search,
+    req.query.limit,
+    req.query.page
+  );
+
+  res.send({ data: { lastPage, posts: posts.map(mapPost) } });
+});
+
+// Получение 1 поста
+app.get("/posts/:id", async (req, res) => {
+  const post = await getPost(req.params.id);
+
+  res.send({ data: mapPost(post) });
+});
+
+// Для действий ниже - пользователь должен быть аутентифицирован
 app.use(authenticated);
+
+// Добавление поста
+app.post("/posts", hasRole([ROLES.ADMIN]), async (req, res) => {
+  const newPost = await addPost({
+    title: req.body.title,
+    content: req.body.content,
+    image: req.body.imageUrl,
+  });
+
+  res.send({ data: mapPost(newPost) });
+});
+
+// Редактирования поста
+app.patch("/posts/:id", hasRole([ROLES.ADMIN]), async (req, res) => {
+  const updatedPost = await editPost(req.params.id, {
+    title: req.body.title,
+    content: req.body.content,
+    image: req.body.imageUrl,
+  });
+
+  res.send({ data: mapPost(updatedPost) });
+});
+
+// Удаление поста
+app.delete("/posts/:id", hasRole([ROLES.ADMIN]), async (req, res) => {
+  await deletePost(req.params.id);
+
+  res.send({ error: null });
+});
 
 // Доступ сюда только администратору, получение пользователей
 app.get("/users", hasRole([ROLES.ADMIN]), async (req, res) => {
