@@ -12,6 +12,7 @@ import { selectUserRole } from '../../selectors';
 import styled from 'styled-components';
 import { ROLE } from '../../constants';
 import PropTypes from 'prop-types';
+import { request } from '../../utils';
 
 const regFormSchema = yup.object().shape({
 	login: yup
@@ -59,14 +60,14 @@ const RegistrationContainer = ({ className }) => {
 	useResetForm(reset);
 
 	const onSubmit = ({ login, password }) => {
-		server.register(login, password).then(({ error, res }) => {
+		request('/register', 'POST', { login, password }).then(({ error, user }) => {
 			if (error) {
 				setServerError(`Ошибка запроса: ${error}`);
 				return;
 			}
 			//Сохраняем ответ от сервера об авторизации
-			dispatch(setUser(res));
-			sessionStorage.setItem('userData', JSON.stringify(res));
+			dispatch(setUser(user));
+			sessionStorage.setItem('userData', JSON.stringify(user));
 		});
 	};
 
