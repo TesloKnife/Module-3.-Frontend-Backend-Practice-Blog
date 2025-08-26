@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { server } from '../../bff';
 import { AuthFormError, Button, H2, Input } from '../../components';
 import { Navigate } from 'react-router-dom';
 import { useResetForm } from '../../hooks';
@@ -60,7 +59,7 @@ const RegistrationContainer = ({ className }) => {
 	useResetForm(reset);
 
 	const onSubmit = ({ login, password }) => {
-		request('/register', 'POST', { login, password }).then(({ error, user }) => {
+		request('/api/register', 'POST', { login, password }).then(({ error, user }) => {
 			if (error) {
 				setServerError(`Ошибка запроса: ${error}`);
 				return;
