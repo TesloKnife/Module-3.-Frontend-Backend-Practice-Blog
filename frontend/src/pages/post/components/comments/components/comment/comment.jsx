@@ -3,13 +3,11 @@ import styled from 'styled-components';
 import { Icon } from '../../../../../../components';
 import { useDispatch, useSelector } from 'react-redux';
 import { CLOSE_MODAL, openModal, removeCommentAsync } from '../../../../../../actions';
-import { useServerRequest } from '../../../../../../hooks';
 import { selectUserRole } from '../../../../../../selectors';
 import { ROLE } from '../../../../../../constants';
 
 const CommentContainer = ({ className, postId, id, author, publishedAt, content }) => {
 	const dispatch = useDispatch();
-	const requestServer = useServerRequest();
 	const userRole = useSelector(selectUserRole);
 
 	const onCommentRemove = (id) => {
@@ -17,7 +15,7 @@ const CommentContainer = ({ className, postId, id, author, publishedAt, content 
 			openModal({
 				text: 'Удалить комментарий?',
 				onConfirm: () => {
-					dispatch(removeCommentAsync(requestServer, postId, id));
+					dispatch(removeCommentAsync(postId, id));
 					dispatch(CLOSE_MODAL);
 				},
 				onCancel: () => dispatch(CLOSE_MODAL),
