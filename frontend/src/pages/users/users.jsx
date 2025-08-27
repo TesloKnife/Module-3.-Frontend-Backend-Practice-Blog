@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { PrivateContent, H2 } from '../../components';
 import { TableRow, UserRow } from './components';
-import { useServerRequest } from '../../hooks';
 import styled from 'styled-components';
 import { ROLE } from '../../constants';
 import { checkAccess } from '../../utils/check-access';
 import { useSelector } from 'react-redux';
 import { selectUserRole } from '../../selectors';
+import { request } from '../../utils';
 
 const UsersContainer = ({ className }) => {
 	const [users, setUsers] = useState([]);
@@ -15,30 +15,27 @@ const UsersContainer = ({ className }) => {
 	const [shouldUpdateUserList, setShouldUpdateUserList] = useState(false);
 	const userRole = useSelector(selectUserRole);
 
-	const requestServer = useServerRequest();
-
 	useEffect(() => {
-		if ((!checkAccess[ROLE.ADMIN], userRole)) {
+		if (!checkAccess([ROLE.ADMIN], userRole)) {
 			return;
 		}
 
-		Promise.all([requestServer('fetchUsers'), requestServer('fetchRoles')]).then(
+		Promise.all([request('/api/users'), request('/api/users/roles')]).then(
 			([usersRes, rolesRes]) => {
 				if (usersRes.error || rolesRes.error) {
 					setErrorMessage(usersRes.error || rolesRes.error);
 					return;
 				}
-				setUsers(usersRes.res);
-				setRoles(rolesRes.res);
+				setUsers(usersRes.data);
+				setRoles(rolesRes.data);
 			},
 		);
-	}, [requestServer, shouldUpdateUserList, userRole]);
-
+	}, [shouldUpdateUserList, userRole]);
 	const onUserRemove = (userId) => {
 		if ((!checkAccess[ROLE.ADMIN], userRole)) {
 			return;
 		}
-		requestServer('removeUser', userId).then(() => {
+		request(`/api/users/${userId}`, 'DELETE').then(() => {
 			setShouldUpdateUserList(!shouldUpdateUserList);
 		});
 	};
