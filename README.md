@@ -1,37 +1,41 @@
-Запуск проекта
+# Запуск проекта
 
+Подготовить контейнер с mongodb
+docker run -d \
+ --name mongo \
+ -p 27017:27017 \
+ -v mongo_data:/data/db \
+ -e MONGO_INITDB_DATABASE=testdb \
+ -e MONGO_INITDB_ROOT_USERNAME=user \
+ -e MONGO_INITDB_ROOT_PASSWORD=mongopass \
+ mongo:latest
+
+## Локальный запуск
+
+cd frontend/
 npm i
 npm run dev
-json-server --watch src/db.json -p 3005
-npx json-server@0.17.4 --watch src/db.json -p 3005
 
-Области хранения данных:
+cd backend/
+npm i
+В app.js:
 
-- База данных на json-server
-- BFF
-- редакс стор
+- закоментить строку **app.use(express.static("../frontend/dist"));**
+- указать DB_CONNECTION_STRING_LOCAL
+  npm run dev
 
-Сущности приложения:
+## Запуск в Docker
 
-- пользователь: БД (список пользователей), BFF (сессия текущего), стор (отображение в браузере)
-- роль пользователя: БД (список ролей), BFF (сессия пользователя с ролью), стор (использование на клиенте)
-- статья: бд (список статей), стор (отображение в браузере)
-- комментарий: БД (список комментариев), стор (отображение в браузере)
+В backend/app.js:
 
-Таблицы БД:
+- раскомментить строку **app.use(express.static("../frontend/dist"));**
+- указать DB_CONNECTION_STRING_DOCKER
 
-- пользователи - users: id / login / password / registered_at / role_id
-- роли - roles: id / name
-- статьи - posts: id / title / image_url / content / published_at
-- комментарии - comments: id / author_id / post_id / content / published_at
+docker build -t blog .
+docker run -p 3006:3001 blog
 
-Схема состояния на BFF:
+# Пример файла backend/.env
 
-- сессия текущего пользователя: login / password / role
-
-Схема для редакс стора (на клиенте):
-
-- user: id / login / role_id / session
-- posts: массив post: id / title / imageUrl / publishedAt / commentsCount
-- posts: id / title / imageUrl / content / publishedAt / comments: массив comment: id / author / content / publishedAt
-- users: массив user: id / login / registeredAt / role
+DB_CONNECTION_STRING="mongodb://user:mongopass@localhost:27017/blog-app?authSource=admin"
+DB_CONNECTION_STRING_DOCKER="mongodb://user:mongopass@host.docker.internal:27017/blog-app?authSource=admin"
+JWT_SECRET="testtest"
