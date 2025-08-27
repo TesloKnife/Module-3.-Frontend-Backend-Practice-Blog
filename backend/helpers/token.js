@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 
-const sing = "testtest";
+const sing = process.env.JWT_SECRET;
 
 module.exports = {
   generate(data) {
